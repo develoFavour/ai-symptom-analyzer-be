@@ -3,6 +3,7 @@ package auth
 import (
 	"ai-symptom-checker/pkg/middleware"
 	"ai-symptom-checker/pkg/utils"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -164,16 +165,21 @@ func (h *Handler) GetMe(c *gin.Context) {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 func setAuthCookies(c *gin.Context, access, refresh, role string) {
+	// For cross-site cookies (Vercel -> Render), we MUST use Secure=true and SameSite=None
+	// Gin's SetCookie doesn't take SameSite as an argument, so we set it on the context
+	c.SetSameSite(http.SameSiteNoneMode)
+
 	// Access token cookie (shorter life)
-	c.SetCookie("access_token", access, int(15*60), "/", "", false, true) // 15 mins
+	c.SetCookie("access_token", access, int(15*60), "/", "", true, true)
 	// Refresh token cookie (longer life)
-	c.SetCookie("refresh_token", refresh, int(7*24*60*60), "/", "", false, true) // 7 days
+	c.SetCookie("refresh_token", refresh, int(7*24*60*60), "/", "", true, true)
 	// Role cookie for middleware (shorter life matching access)
-	c.SetCookie("user_role", role, int(15*60), "/", "", false, true)
+	c.SetCookie("user_role", role, int(15*60), "/", "", true, true)
 }
 
 func clearAuthCookies(c *gin.Context) {
-	c.SetCookie("access_token", "", -1, "/", "", false, true)
-	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
-	c.SetCookie("user_role", "", -1, "/", "", false, true)
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie("access_token", "", -1, "/", "", true, true)
+	c.SetCookie("refresh_token", "", -1, "/", "", true, true)
+	c.SetCookie("user_role", "", -1, "/", "", true, true)
 }
