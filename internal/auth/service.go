@@ -122,17 +122,35 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) (*AuthResponse, e
 		}
 	}
 
-	// Automatic detection: Try patient -> doctor -> admin
-	if res, err := s.loginPatient(ctx, req); err == nil {
-		return res, nil
+	// Automatic detection: Try patient, doctor, and admin in parallel to avoid sequential timeouts
+	type result struct {
+		res *AuthResponse
+		err error
 	}
+	resChan := make(chan result, 3)
 
-	if res, err := s.loginDoctor(ctx, req); err == nil {
-		return res, nil
-	}
+	go func() {
+		res, err := s.loginPatient(ctx, req)
+		resChan <- result{res, err}
+	}()
+	go func() {
+		res, err := s.loginDoctor(ctx, req)
+		resChan <- result{res, err}
+	}()
+	go func() {
+		res, err := s.loginAdmin(ctx, req)
+		resChan <- result{res, err}
+	}()
 
-	if res, err := s.loginAdmin(ctx, req); err == nil {
-		return res, nil
+	var firstErr error
+	for i := 0; i < 3; i++ {
+		r := <-resChan
+		if r.err == nil {
+			return r.res, nil
+		}
+		if firstErr == nil {
+			firstErr = r.err
+		}
 	}
 
 	return nil, errors.New("invalid email or password")

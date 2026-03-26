@@ -58,21 +58,13 @@ func (s *Service) CreateEntry(ctx context.Context, adminID uuid.UUID, req Create
 }
 
 func (s *Service) ListEntries(ctx context.Context, filter map[string]interface{}, limit, offset int) ([]models.KnowledgeEntry, int64, error) {
-	entries, total, err := s.repo.ListEntries(ctx, filter, limit, offset)
-	if err == nil {
-		go s.enrichDescriptions(context.Background(), entries)
-	}
-	return entries, total, err
+	return s.repo.ListEntries(ctx, filter, limit, offset)
 }
 
 func (s *Service) InquireEntries(ctx context.Context, filter map[string]interface{}, limit, offset int) ([]models.KnowledgeEntry, int64, error) {
 	// For doctors, we only show active records
 	filter["status"] = models.KnowledgeStatusActive
-	entries, total, err := s.repo.ListEntries(ctx, filter, limit, offset)
-	if err == nil {
-		go s.enrichDescriptions(context.Background(), entries)
-	}
-	return entries, total, err
+	return s.repo.ListEntries(ctx, filter, limit, offset)
 }
 
 func (s *Service) enrichDescriptions(ctx context.Context, entries []models.KnowledgeEntry) {
