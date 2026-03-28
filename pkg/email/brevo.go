@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"ai-symptom-checker/config"
 )
 
 const brevoAPIURL = "https://api.brevo.com/v3/smtp/email"
@@ -104,7 +106,7 @@ func SendWelcomeEmail(name, email string) error {
 				Login to Dashboard
 			</a>
 		</div>
-	</div>`, name, os.Getenv("FRONTEND_URL"))
+	</div>`, name, config.App.FrontendURL)
 	return send(Contact{Name: name, Email: email}, "Welcome to AI Symptom Checker", html)
 }
 

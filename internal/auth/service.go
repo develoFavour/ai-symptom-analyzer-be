@@ -5,10 +5,10 @@ import (
 	"errors"
 	"time"
 
+	"ai-symptom-checker/config"
 	"ai-symptom-checker/models"
 	"ai-symptom-checker/pkg/email"
 	"ai-symptom-checker/pkg/utils"
-	"os"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -99,7 +99,7 @@ func (s *Service) RegisterPatient(ctx context.Context, req RegisterRequest) (*Au
 	}
 
 	// Send verification email (non-blocking)
-	verificationLink := os.Getenv("FRONTEND_URL") + "/verify?token=" + token
+	verificationLink := config.App.FrontendURL + "/verify?token=" + token
 	go email.SendVerificationEmail(user.Name, user.Email, verificationLink)
 
 	// We return empty codes to signal that the user is NOT logged in yet
