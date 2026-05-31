@@ -2,10 +2,7 @@ package config
 
 import (
 	"log"
-	"os"
 	"time"
-
-	"ai-symptom-checker/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -32,32 +29,6 @@ func ConnectDB() *gorm.DB {
 	sqlDB.SetMaxIdleConns(5)
 	sqlDB.SetMaxOpenConns(20)
 	sqlDB.SetConnMaxLifetime(30 * time.Minute)
-
-	// Auto-migrate only if enabled
-	if os.Getenv("SKIP_MIGRATIONS") == "true" {
-		log.Println("[Database] Skipping auto-migrations (SKIP_MIGRATIONS=true)")
-	} else {
-		log.Println("[Database] Running auto-migrations...")
-		mStart := time.Now()
-		err = db.AutoMigrate(
-			&models.User{},
-			&models.Doctor{},
-			&models.Admin{},
-			&models.SymptomSession{},
-			&models.Diagnosis{},
-			&models.Consultation{},
-			&models.ConsultationReply{},
-			&models.ConsultationMessage{},
-			&models.KnowledgeEntry{},
-			&models.Notification{},
-			&models.Feedback{},
-			&models.AdminLog{},
-		)
-		if err != nil {
-			log.Fatalf("[Database] Auto-migration failed: %v", err)
-		}
-		log.Printf("[Database] Auto-migration completed in %v", time.Since(mStart))
-	}
 
 	DB = db
 	return db
